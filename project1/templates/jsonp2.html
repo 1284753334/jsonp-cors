@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="x-ua-compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Title</title>
+</head>
+<body>
+
+<h1>ajax跨域之jsonp</h1>
+
+<input type="button" id="b1" value="向自己家发送请求">
+<input type="button" id="b2" value="向别的网址发送请求">
+<input type="button" id="b3" value="手动实现jsonp本质">
+<input type="button" id="b4" value="手动实现jsonp本质callback">
+<input type="button" id="b5" value="ajax的jsonp，自己写同名回调函数">
+<input type="button" id="b6" value="ajax的jsonp，一切从简">
+
+<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.js"></script>
+<script>
+    // 向自己家发送请求没问题，
+    $("#b1").click(function () {
+        $.ajax({
+            url: 'http://127.0.0.1:8844/test1/',
+            type: 'GET',
+            success: function (arg) {
+                alert(arg)
+            }
+        })
+    });
+
+    // 咱们向别的网址发送请求就会遇到问题，浏览器同源策略影响
+    $("#b2").click(function () {
+        $.ajax({
+            url: 'http://127.0.0.1:8033/data/',
+            type: 'GET',
+            success: function (arg) {
+                alert(arg)
+            }
+        })
+    });
+
+    /*
+    jsonp的的本质，利用script标签的src属性发送请求
+    script的src属性把返回的数据当成一个未定义的变量，所以，我们还要对这个变量做处理
+    */
+    $("#b3").click(function () {
+        var tag = document.createElement('script');
+        tag.src = 'http://127.0.0.1:8033/data2/';
+        document.head.appendChild(tag)
+    });
+
+    // 利用自定义函数来获取返回的数据
+
+    function list(arg) {
+        alert(arg);
+        document.head.removeChild(tag)
+    }
+
+    $("#b4").click(function () {
+        tag = document.createElement('script');
+        tag.src = 'http://127.0.0.1:8033/data3/?callback=list';
+        document.head.appendChild(tag)
+    });
+
+
+    // ajax的jsonp，这两种方式，差不多，请求的网站只需动态加上回调函数
+    //方式一，在自定义的同名回调函数里处理数据，虽然success里也可以处理
+
+    function dict(arg) {
+        alert(arg);
+    }
+
+    $("#b5").click(function () {
+        $.ajax({
+            url: 'http://127.0.0.1:8033/data5/',
+            type: 'GET',
+            dataType:'JSONP', // 传输方式是jsonp
+            jsonp:'callback', // 等于在地址栏后面加上：?callback
+            jsonpCallback:'dict', // 等于http://127.0.0.1:8033/data4/?callback=dict
+        })
+    });
+
+    // 方式二，一切从简，直接在ajax的success里处理数据
+    // 要是单独只说明datatype，则ajax会自己定义callback，但是所请求的网站包含数据的函数名，不能写死
+    // 需写动态的，因为ajax的callback是动态的，
+
+    $("#b6").click(function () {
+        $.ajax({
+            url: 'http://127.0.0.1:8033/data5/',
+            type: 'GET',
+            dataType:'JSONP',
+            success: function (arg) {
+                alert(arg)
+            }
+        })
+    });
+
+
+
+</script>
+
+</body>
+</html>
